@@ -1,0 +1,974 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Unity DOTS — справочник для первого проекта</title>
+<style>
+  @page { size: A4; margin: 15mm 14mm 14mm 14mm; }
+
+  :root {
+    --ink: #16181d;
+    --dim: #5b6271;
+    --line: #d2d7e0;
+    --accent: #1b5e9c;
+    --code-bg: #f4f6f9;
+    --warn-bg: #fdf6e8;
+    --warn-line: #d9a93a;
+    --ok-bg: #eef7f0;
+    --ok-line: #4a9460;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    color: var(--ink);
+    font: 10.5pt/1.5 "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  code, pre, table.api td:first-child {
+    font-family: Consolas, "Cascadia Mono", "Courier New", monospace;
+  }
+
+  .cover { height: 252mm; display: flex; flex-direction: column; justify-content: center; }
+  .cover h1 { font-size: 29pt; line-height: 1.15; margin: 0 0 6mm; letter-spacing: -0.5pt; }
+  .cover .sub { font-size: 12.5pt; color: var(--dim); margin: 0 0 12mm; }
+  .cover .rule { height: 3px; background: var(--accent); width: 46mm; margin: 0 0 13mm; }
+  .cover .meta { font-size: 9.5pt; color: var(--dim); margin-top: 12mm; }
+  .cover .lead { font-size: 10.5pt; margin-bottom: 4mm; }
+
+  .step { break-before: page; }
+
+  .step > h2 {
+    font-size: 17pt; margin: 0 0 1mm;
+    padding-bottom: 2.5mm; border-bottom: 2px solid var(--accent);
+  }
+  .step > h2 .num {
+    display: inline-block; min-width: 9mm;
+    color: var(--accent);
+  }
+  .goal { color: var(--dim); font-size: 10pt; margin: 2.5mm 0 5mm; }
+
+  h3 {
+    font-size: 10pt; text-transform: uppercase; letter-spacing: 0.6pt;
+    color: var(--accent); margin: 6mm 0 2.5mm;
+  }
+
+  p { margin: 0 0 2.5mm; }
+  ul { margin: 0 0 2.5mm; padding-left: 5mm; }
+  li { margin-bottom: 1.2mm; }
+
+  table.api { width: 100%; border-collapse: collapse; margin: 0 0 3mm; }
+  table.api td { border-top: 1px solid var(--line); padding: 1.8mm 2mm; vertical-align: top; }
+  table.api tr:first-child td { border-top: 1.5px solid var(--ink); }
+  table.api td:first-child { width: 50%; font-size: 8.7pt; line-height: 1.4; background: var(--code-bg); }
+  table.api td:last-child { font-size: 9.2pt; color: #2e3340; }
+  table.api td b { color: var(--accent); font-weight: 600; }
+  table.api tr { break-inside: avoid; }
+
+  table.api tr.grp td {
+    background: none; border-top: 1.5px solid var(--ink);
+    font: 600 9pt/1.4 "Segoe UI", sans-serif; text-transform: uppercase;
+    letter-spacing: 0.5pt; color: var(--dim); padding-top: 3.5mm;
+  }
+
+  .box { padding: 3mm 3.5mm; margin: 0 0 3mm; font-size: 9.5pt; break-inside: avoid; }
+  .box p:last-child, .box ul:last-child { margin-bottom: 0; }
+  .warn { background: var(--warn-bg); border-left: 3px solid var(--warn-line); }
+  .ok   { background: var(--ok-bg);   border-left: 3px solid var(--ok-line); }
+  .box .t { font-weight: 600; display: block; margin-bottom: 1.5mm; }
+
+  pre {
+    background: var(--code-bg); border-left: 3px solid var(--line);
+    padding: 2.5mm 3mm; margin: 0 0 3mm;
+    font-size: 8.7pt; line-height: 1.45; white-space: pre-wrap;
+    break-inside: avoid;
+  }
+  .files { font-size: 9.2pt; }
+  code { background: var(--code-bg); padding: 0.3mm 1mm; font-size: 9pt; }
+  .box code, table.api td:last-child code { background: rgba(0,0,0,0.05); }
+</style>
+</head>
+<body>
+
+<!-- ======================= ТИТУЛ ======================= -->
+<section class="cover">
+  <div class="rule"></div>
+  <h1>Unity DOTS<br>справочник для первого проекта</h1>
+  <p class="sub">Игра «Сборщик»: кубик ездит по полю и собирает монетки на время.<br>
+  Восемь шагов. Код ты пишешь сам — здесь только то, из чего его собрать.</p>
+
+  <p class="lead"><b>Как этим пользоваться.</b> В каждом шаге написано, что должно
+  заработать, какие файлы создать и какие конструкции для этого существуют.
+  Готовых решений нет намеренно: концепция ECS укладывается в голове, когда сам
+  решаешь, где лежат данные и кто их меняет. Если застрял на синтаксисе — он
+  в таблицах. Если застрял на ошибке — приложение Б.</p>
+
+  <p class="lead"><b>Порядок важен.</b> Шаги устроены так, что после каждого игра
+  запускается и что-то делает. Не прыгай вперёд: шаг 5 опирается на то, что
+  в шаге 3 ты уже разобрался с бейкингом.</p>
+
+  <p class="lead"><b>Чего здесь нет.</b> Джобов, Burst, пулов, физики. Всё это
+  в первом проекте только мешает: оно про производительность, а не про концепцию.
+  Игра из восьми шагов работает на главном потоке и этого достаточно.</p>
+
+  <p class="meta">Unity 6000.x &nbsp;·&nbsp; com.unity.entities 6.5 &nbsp;·&nbsp; URP<br>
+  Сигнатуры даны для Entities 1.0 и новее; в версиях до 1.0 они выглядели иначе.</p>
+</section>
+
+<!-- ======================= ШАГ 1 ======================= -->
+<section class="step">
+  <h2><span class="num">1</span>Подготовка проекта</h2>
+  <p class="goal">Цель: пустая сцена, в которой работает ECS, и открытые окна,
+  показывающие сущности. Без них дальше придётся гадать.</p>
+
+  <h3>Что сделать руками</h3>
+  <ul>
+    <li>Новый проект на шаблоне <b>Universal 3D</b>.</li>
+    <li>Package Manager → <code>+</code> → Add package by name →
+        <code>com.unity.entities.graphics</code>. Он подтянет
+        <code>com.unity.entities</code> сам. Ставить нужно именно graphics:
+        без него сущности существуют, но не рисуются.</li>
+    <li>В сцене: правый клик в Hierarchy → <b>New Sub Scene</b> → Empty Scene,
+        назови <code>MainSubScene</code>.</li>
+    <li>Открой <b>Window → Entities → Hierarchy</b> и
+        <b>Window → Entities → Systems</b>. Первое окно показывает, что
+        существует в игре, второе — какие системы работают и в каком порядке.</li>
+  </ul>
+
+  <div class="box warn">
+    <span class="t">Главное правило всего проекта</span>
+    <p>Объект становится сущностью <b>только если лежит внутри SubScene</b>.
+    В обычной сцене он выглядит в инспекторе точно так же, скрипт компилируется,
+    ошибок нет — но бейкинг не запускается и сущности не появляется.
+    Когда «система ничего не находит», первым делом смотри, внутри ли SubScene
+    лежит объект.</p>
+  </div>
+
+  <h3>Структура папок</h3>
+  <p class="files">Заведи сразу: <code>Scripts/Components</code> — структуры
+  данных, <code>Scripts/Authoring</code> — мосты из сцены в ECS,
+  <code>Scripts/Systems</code> — логика, <code>Scripts/UI</code> — обычные
+  MonoBehaviour. Разделение не формальность: у этих четырёх видов кода разные
+  правила, и держать их вперемешку больно.</p>
+
+  <h3>Как проверить</h3>
+  <div class="box ok">
+    <p>Положи в SubScene обычный Cube. В окне Entities Hierarchy должна появиться
+    сущность <code>Cube</code>; выдели её — справа видны её компоненты:
+    <code>LocalTransform</code>, <code>LocalToWorld</code> и прочее.
+    Если сущности нет, SubScene не запеклась: выдели её в Hierarchy и нажми
+    в инспекторе <b>Open</b>, затем <b>Close</b>.</p>
+  </div>
+</section>
+
+<!-- ======================= ШАГ 2 ======================= -->
+<section class="step">
+  <h2><span class="num">2</span>Компоненты данных</h2>
+  <p class="goal">Цель: описать, какие данные бывают в игре. Логики ещё нет,
+  только структуры. Для понимания ECS это самый важный шаг.</p>
+
+  <h3>Что создать</h3>
+  <p class="files">В <code>Scripts/Components</code>, по файлу на компонент:
+  <code>Speed</code>, <code>PlayerTag</code>, <code>CoinTag</code>,
+  <code>Score</code>, <code>GameTimer</code>, <code>SpawnerData</code>.</p>
+
+  <h3>Из чего собирать</h3>
+  <table class="api">
+    <tr>
+      <td>struct Speed : IComponentData<br>{ public float Value; }</td>
+      <td><b>Компонент данных.</b> Обязательно <code>struct</code>, обязательно
+      публичные поля. Это не класс и не MonoBehaviour: нет методов, нет
+      <code>Start</code>, нет ссылок на сцену.</td>
+    </tr>
+    <tr>
+      <td>struct PlayerTag : IComponentData { }</td>
+      <td><b>Тег.</b> Пустая структура. Нужна, чтобы отличать сущности в
+      запросах — «возьми всех, у кого есть PlayerTag». Памяти не занимает.</td>
+    </tr>
+    <tr>
+      <td>struct Score : IComponentData<br>{ public int Value; }</td>
+      <td><b>Синглтон.</b> Технически обычный компонент; синглтоном его делает
+      то, что в игре он существует ровно на одной сущности. Так хранят общее
+      состояние: счёт, таймер, настройки.</td>
+    </tr>
+  </table>
+
+  <h3>Что можно класть внутрь</h3>
+  <table class="api">
+    <tr>
+      <td>float, int, bool, enum<br>float2, float3, quaternion<br>Entity</td>
+      <td><b>Можно.</b> <code>float3</code> и остальная математика — из
+      <code>Unity.Mathematics</code>, не из <code>UnityEngine</code>.
+      <code>Entity</code> — ссылка на другую сущность, внутри это просто пара
+      чисел.</td>
+    </tr>
+    <tr>
+      <td>string, int[], List&lt;T&gt;,<br>GameObject, Transform, class</td>
+      <td><b>Нельзя.</b> Компонент должен быть blittable — простая память без
+      ссылок. Ошибка появится не при компиляции, а позже, от IL-постпроцессора,
+      и текст у неё невнятный.</td>
+    </tr>
+  </table>
+
+  <div class="box warn">
+    <span class="t">Где ломается привычка из ООП</span>
+    <p>Хочется сделать один компонент <code>Player</code> со всеми полями: скорость,
+    счёт, здоровье. Так делать не надо — и не из-за производительности, а потому
+    что тогда каждая система зависит от всех данных сразу, и теряется главное
+    свойство ECS: система видит ровно те поля, которые ей нужны.</p>
+    <p>Правило на первое время: один компонент — одна осмысленная величина.
+    Позицию <b>не описывай вообще</b>, она уже есть (шаг 4).</p>
+  </div>
+
+  <h3>Как проверить</h3>
+  <div class="box ok">
+    <p>Проверять пока нечего — убедись, что проект компилируется. Если в консоли
+    ругань про blittable, внутри компонента остался класс, массив или строка.</p>
+  </div>
+</section>
+
+<!-- ======================= ШАГ 3 ======================= -->
+<section class="step">
+  <h2><span class="num">3</span>Игрок на сцене: authoring и Baker</h2>
+  <p class="goal">Цель: кубик в SubScene превращается в сущность, у которой есть
+  <code>PlayerTag</code> и <code>Speed</code> со значением, выставленным
+  в инспекторе.</p>
+
+  <p>Бейкинг — это перевод сцены в сущности, он происходит <b>в редакторе</b>,
+  до запуска игры. Authoring-компонент это обычный MonoBehaviour: он нужен
+  только чтобы ты мог что-то потрогать в инспекторе. В игру он не попадает —
+  в игру попадает то, что Baker из него сделал.</p>
+
+  <h3>Что создать</h3>
+  <p class="files"><code>Scripts/Authoring/PlayerAuthoring.cs</code>, повесить
+  на Cube внутри SubScene.</p>
+
+  <h3>Каркас</h3>
+  <pre>public class PlayerAuthoring : MonoBehaviour
+{
+    public float Speed;          // видно в инспекторе
+
+    class PlayerBaker : Baker&lt;PlayerAuthoring&gt;
+    {
+        public override void Bake(PlayerAuthoring authoring)
+        {
+            // здесь получить сущность и добавить ей компоненты
+        }
+    }
+}</pre>
+
+  <h3>Из чего собирать</h3>
+  <table class="api">
+    <tr>
+      <td>GetEntity(TransformUsageFlags flags)</td>
+      <td><b>Сущность этого объекта.</b> Вызывается внутри <code>Bake</code>.
+      Флаг говорит, какие трансформные компоненты нужны:
+      <code>Dynamic</code> — объект будет двигаться,
+      <code>Renderable</code> — только рисуется и стоит на месте,
+      <code>None</code> — чистые данные без позиции.</td>
+    </tr>
+    <tr>
+      <td>AddComponent(entity, new Speed { ... })</td>
+      <td><b>Добавить компонент со значением.</b> Значения берутся из полей
+      <code>authoring</code>.</td>
+    </tr>
+    <tr>
+      <td>AddComponent&lt;PlayerTag&gt;(entity)</td>
+      <td><b>Добавить тег.</b> Форма для пустых структур, значение передавать
+      нечего.</td>
+    </tr>
+    <tr>
+      <td>GetEntity(authoring.Prefab, flags)</td>
+      <td><b>Сущность другого объекта</b> — понадобится в шаге 5 для префаба.
+      Возвращает <code>Entity</code>, который можно положить в компонент.</td>
+    </tr>
+  </table>
+
+  <div class="box warn">
+    <span class="t">Две ловушки, обе тихие</span>
+    <p><b>Забыл AddComponent</b> — ошибки не будет никакой. Система просто не
+    найдёт ни одной подходящей сущности и будет молча работать впустую. Это самая
+    частая причина «ничего не происходит, но и не падает».</p>
+    <p><b>Неверный TransformUsageFlags</b> — если поставить
+    <code>Renderable</code> объекту, который должен двигаться, у сущности не
+    будет <code>LocalTransform</code>, и запрос из шага 4 её не увидит.
+    Для игрока нужен <code>Dynamic</code>.</p>
+  </div>
+
+  <h3>Как проверить</h3>
+  <div class="box ok">
+    <p>Entities Hierarchy → выдели сущность кубика. В списке её компонентов
+    должны быть <code>PlayerTag</code> и <code>Speed</code>, причём у
+    <code>Speed</code> видно значение из инспектора. Поменяй значение
+    в инспекторе — число в окне сущностей должно измениться сразу, без запуска
+    игры. Это и есть бейкинг.</p>
+  </div>
+</section>
+
+<!-- ======================= ШАГ 4 ======================= -->
+<section class="step">
+  <h2><span class="num">4</span>Движение по WASD</h2>
+  <p class="goal">Цель: кубик едет по нажатию клавиш, упираясь в границы поля.
+  Первая система.</p>
+
+  <p>Система — это <code>struct</code>, который Unity находит сам и вызывает
+  каждый кадр. Регистрировать его нигде не нужно, достаточно объявить.
+  Слово <code>partial</code> обязательно: генератор кода дописывает в систему
+  свою половину, и без <code>partial</code> будет ошибка компиляции.</p>
+
+  <h3>Каркас</h3>
+  <pre>public partial struct PlayerMoveSystem : ISystem
+{
+    public void OnCreate(ref SystemState state) { }   // один раз, до игры
+    public void OnUpdate(ref SystemState state) { }   // каждый кадр
+    public void OnDestroy(ref SystemState state) { }  // при выключении
+}</pre>
+  <p class="files">Все три метода необязательны: у <code>ISystem</code> есть
+  пустые реализации по умолчанию, лишние можно не писать.</p>
+
+  <h3>Позиция, поворот, масштаб</h3>
+  <table class="api">
+    <tr>
+      <td>LocalTransform</td>
+      <td><b>Трансформ сущности.</b> Отдельный компонент писать не надо, он
+      появляется сам при флаге <code>Dynamic</code>. Поля:
+      <code>Position</code> (float3), <code>Rotation</code> (quaternion),
+      <code>Scale</code> (float — один, а не три).</td>
+    </tr>
+    <tr>
+      <td>LocalTransform.FromPosition(float3)</td>
+      <td><b>Создать трансформ.</b> Есть также
+      <code>FromPositionRotation</code>, <code>FromPositionRotationScale</code>,
+      <code>LocalTransform.Identity</code>.</td>
+    </tr>
+  </table>
+
+  <h3>Перебор сущностей</h3>
+  <table class="api">
+    <tr>
+      <td>foreach (var (a, b) in SystemAPI<br>
+      &nbsp; .Query&lt;RefRW&lt;LocalTransform&gt;,<br>
+      &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;RefRO&lt;Speed&gt;&gt;())</td>
+      <td><b>Основной цикл ECS.</b> Перебирает все сущности, у которых есть
+      <i>все</i> перечисленные компоненты. Остальные не попадут.</td>
+    </tr>
+    <tr>
+      <td>RefRW&lt;T&gt; → .ValueRW<br>RefRO&lt;T&gt; → .ValueRO</td>
+      <td><b>Чтение и запись.</b> <code>RW</code> — собираешься менять,
+      <code>RO</code> — только читать. Ставь <code>RO</code> везде, где можно:
+      это не стиль, а информация для планировщика.</td>
+    </tr>
+    <tr>
+      <td>.WithAll&lt;PlayerTag&gt;()</td>
+      <td><b>Фильтр по тегу.</b> Дописывается после <code>Query</code>.
+      Нужен, когда сам компонент в цикле не используется, а отличить сущности
+      надо. Есть ещё <code>WithNone&lt;T&gt;()</code>,
+      <code>WithAny&lt;T&gt;()</code>.</td>
+    </tr>
+    <tr>
+      <td>.WithEntityAccess()</td>
+      <td><b>Добавляет саму сущность</b> последним элементом кортежа. Нужно,
+      когда её собираешься удалить или изменить — см. шаг 6.</td>
+    </tr>
+    <tr>
+      <td>SystemAPI.Time.DeltaTime</td>
+      <td><b>Время кадра.</b> Не <code>Time.deltaTime</code> из UnityEngine.
+      Умножай на него любое движение, иначе скорость будет зависеть от
+      частоты кадров.</td>
+    </tr>
+  </table>
+
+  <h3>Ввод и математика</h3>
+  <table class="api">
+    <tr>
+      <td>Input.GetAxis("Horizontal")<br>Input.GetAxis("Vertical")</td>
+      <td><b>Оси WASD и стрелок,</b> от −1 до 1. Это обычный UnityEngine,
+      и работает он только на главном потоке — то есть прямо в
+      <code>OnUpdate</code>. Внутрь джобы его вынести нельзя.</td>
+    </tr>
+    <tr>
+      <td>math.clamp(v, min, max)<br>math.normalize(v)<br>math.lengthsq(v)</td>
+      <td><b>Математика</b> из <code>Unity.Mathematics</code>. Для границ поля
+      нужен <code>clamp</code> по X и Z.</td>
+    </tr>
+  </table>
+
+  <div class="box warn">
+    <span class="t">Диагональ едет быстрее</span>
+    <p>Если складывать ввод по осям напрямую, при двух нажатых клавишах длина
+    вектора будет 1.41 вместо 1, и по диагонали кубик поедет на 41% быстрее.
+    Нормализуй вектор ввода — но только когда он не нулевой:
+    <code>math.normalize</code> от нуля даёт NaN, а NaN в позиции убивает
+    сущность навсегда.</p>
+  </div>
+
+  <h3>Как проверить</h3>
+  <div class="box ok">
+    <p>Кубик едет по WASD с той скоростью, что стоит в инспекторе, и не уезжает
+    за край поля. Зажми две клавиши: по диагонали скорость должна быть такой же,
+    как по прямой.</p>
+  </div>
+</section>
+
+<!-- ======================= ШАГ 5 ======================= -->
+<section class="step">
+  <h2><span class="num">5</span>Спавн монеток</h2>
+  <p class="goal">Цель: раз в N секунд в случайном месте поля появляется монетка.
+  Здесь впервые создаются сущности во время игры.</p>
+
+  <p>Сущность нельзя просто создать посреди перебора: создание и удаление
+  меняют структуру памяти и ломают цикл, внутри которого ты находишься.
+  Поэтому команды складывают в буфер и проигрывают после.</p>
+
+  <h3>Что создать</h3>
+  <p class="files">Префаб монетки (Cube поменьше, свой материал) +
+  <code>CoinAuthoring</code> с <code>CoinTag</code>. Пустой объект
+  <code>Spawner</code> в SubScene + <code>SpawnerAuthoring</code> с полем
+  <code>public GameObject CoinPrefab</code>. Система
+  <code>CoinSpawnSystem</code>.</p>
+
+  <div class="box warn">
+    <span class="t">Префаб тоже надо запечь</span>
+    <p>Положить <code>GameObject</code> в компонент нельзя. В Baker спавнера
+    вызови <code>GetEntity(authoring.CoinPrefab, TransformUsageFlags.Dynamic)</code>
+    — вернётся <code>Entity</code>, вот его и храни в
+    <code>SpawnerData.Prefab</code>. Сам префаб при этом не обязан лежать
+    в сцене.</p>
+  </div>
+
+  <h3>Создание сущностей</h3>
+  <table class="api">
+    <tr>
+      <td>state.EntityManager<br>&nbsp; .Instantiate(prefabEntity)</td>
+      <td><b>Копия префаба, немедленно.</b> Возвращает <code>Entity</code>,
+      которому можно сразу задать позицию. Простой путь, годится, пока создаёшь
+      по одной сущности вне перебора.</td>
+    </tr>
+    <tr>
+      <td>var ecb = new EntityCommandBuffer(<br>&nbsp; Allocator.Temp);<br>
+      ecb.Playback(state.EntityManager);<br>ecb.Dispose();</td>
+      <td><b>Буфер команд.</b> Собирает действия и выполняет их все сразу
+      в момент <code>Playback</code>. Так создают и удаляют сущности, находясь
+      внутри перебора.</td>
+    </tr>
+    <tr>
+      <td>ecb.Instantiate(prefab)<br>ecb.DestroyEntity(entity)<br>
+      ecb.SetComponent(e, value)<br>ecb.AddComponent(e, value)</td>
+      <td><b>Команды буфера.</b> Выполняются не сразу, а при
+      <code>Playback</code>. <code>Instantiate</code> возвращает «обещание»
+      сущности — ему можно задавать компоненты, хотя её ещё нет.</td>
+    </tr>
+    <tr>
+      <td>state.EntityManager<br>&nbsp; .SetComponentData(e, value)</td>
+      <td><b>Задать компонент немедленно.</b> Парный
+      <code>GetComponentData&lt;T&gt;(e)</code>. Внутри перебора использовать
+      нельзя — только до или после.</td>
+    </tr>
+  </table>
+
+  <h3>Таймер и случайность</h3>
+  <table class="api">
+    <tr>
+      <td>Unity.Mathematics.Random<br>
+      Random.CreateFromIndex(uint seed)<br>
+      rnd.NextFloat(min, max)<br>rnd.NextInt(min, max)</td>
+      <td><b>Случайные числа для ECS.</b> Это структура с состоянием: её надо
+      хранить в компоненте и возвращать обратно после использования, иначе
+      каждый кадр выпадет одно и то же число.
+      <code>UnityEngine.Random</code> в ECS не используют.</td>
+    </tr>
+    <tr>
+      <td>поле float Timer в компоненте</td>
+      <td><b>Как отсчитывать время.</b> Своей памяти у системы нет — точнее,
+      есть поля структуры, но хранить состояние игры в них неправильно.
+      Прибавляй <code>DeltaTime</code> к полю компонента, при достижении порога
+      спавни и вычитай порог.</td>
+    </tr>
+  </table>
+
+  <div class="box warn">
+    <span class="t">Состояние системы живёт в компонентах</span>
+    <p>Соблазн объявить <code>private float _timer</code> полем системы. Так
+    делать не надо: система концептуально не владеет данными, она их только
+    обрабатывает. Таймер — это данные игры, его место в
+    <code>SpawnerData</code>. То же про <code>Random</code>.</p>
+  </div>
+
+  <h3>Как проверить</h3>
+  <div class="box ok">
+    <p>Монетки появляются в разных местах с нужным интервалом, и число сущностей
+    в Entities Hierarchy растёт. Если все появляются в одной точке — не вернул
+    состояние <code>Random</code> обратно в компонент.</p>
+  </div>
+</section>
+
+<!-- ======================= ШАГ 6 ======================= -->
+<section class="step">
+  <h2><span class="num">6</span>Подбор монеток и счёт</h2>
+  <p class="goal">Цель: когда игрок подъезжает к монетке, она исчезает, счёт
+  растёт на единицу.</p>
+
+  <p>Здесь появляется задача, непривычная после ООП: нужно сравнить игрока
+  с каждой монеткой, то есть совместить два разных перебора. Прямого способа
+  нет и это нормально — позиция игрока берётся до цикла, одним запросом.</p>
+
+  <h3>Что создать</h3>
+  <p class="files">Система <code>CoinPickupSystem</code>. Сущность-синглтон
+  со <code>Score</code>: либо отдельный пустой объект в SubScene с
+  authoring-компонентом, либо создать её в <code>OnCreate</code> системы
+  (см. ниже).</p>
+
+  <h3>Синглтоны</h3>
+  <table class="api">
+    <tr>
+      <td>SystemAPI.GetSingleton&lt;Score&gt;()</td>
+      <td><b>Прочитать синглтон.</b> Возвращает <b>копию</b> — изменения в ней
+      никуда не попадут. Бросает исключение, если сущностей не ровно одна.</td>
+    </tr>
+    <tr>
+      <td>SystemAPI.GetSingletonRW&lt;Score&gt;()<br>&nbsp; .ValueRW.Value++</td>
+      <td><b>Изменить синглтон.</b> Именно это нужно для счёта. Самая частая
+      ошибка новичка — менять результат <code>GetSingleton</code> и удивляться,
+      что ничего не меняется.</td>
+    </tr>
+    <tr>
+      <td>SystemAPI.TryGetSingleton&lt;T&gt;(out T v)</td>
+      <td><b>Безопасный вариант</b> — <code>false</code> вместо исключения,
+      если синглтона нет.</td>
+    </tr>
+    <tr>
+      <td>SystemAPI.GetSingletonEntity&lt;T&gt;()</td>
+      <td><b>Сама сущность</b> синглтона, а не его значение.</td>
+    </tr>
+    <tr>
+      <td>state.EntityManager.CreateEntity()<br>
+      &nbsp; + AddComponent&lt;Score&gt;(e)</td>
+      <td><b>Создать синглтон кодом,</b> в <code>OnCreate</code>. Удобно, когда
+      в инспекторе настраивать нечего: не нужен ни объект в сцене, ни
+      authoring.</td>
+    </tr>
+  </table>
+
+  <h3>Поиск соседей и удаление</h3>
+  <table class="api">
+    <tr>
+      <td>math.distancesq(a, b)</td>
+      <td><b>Квадрат расстояния.</b> Сравнивай с квадратом радиуса:
+      <code>distancesq &lt; r * r</code>. Корень не считается, а для сравнения
+      он и не нужен.</td>
+    </tr>
+    <tr>
+      <td>.WithEntityAccess()</td>
+      <td><b>Нужен здесь обязательно</b> — чтобы получить
+      <code>Entity</code> монетки и передать его на удаление.</td>
+    </tr>
+    <tr>
+      <td>ecb.DestroyEntity(entity)</td>
+      <td><b>Удалить сущность</b> после перебора. Напрямую
+      <code>EntityManager.DestroyEntity</code> внутри <code>foreach</code>
+      вызывать нельзя.</td>
+    </tr>
+  </table>
+
+  <div class="box warn">
+    <span class="t">Как получить позицию игрока внутри цикла по монеткам</span>
+    <p>Не вкладывай один <code>SystemAPI.Query</code> в другой. Правильно:
+    до цикла одной строкой достать трансформ игрока — через запрос с
+    <code>WithAll&lt;PlayerTag&gt;()</code> или через синглтон, если игрок один, —
+    положить в локальную переменную <code>float3</code>, и дальше перебирать
+    монетки, сравнивая с ней.</p>
+  </div>
+
+  <h3>Как проверить</h3>
+  <div class="box ok">
+    <p>Монетка исчезает при наезде. Значение <code>Score</code> в Entities
+    Hierarchy растёт — выдели сущность со счётом и смотри на него во время
+    игры. На экране его ещё нет, это следующий шаг.</p>
+  </div>
+</section>
+
+<!-- ======================= ШАГ 7 ======================= -->
+<section class="step">
+  <h2><span class="num">7</span>Счёт и таймер на экране</h2>
+  <p class="goal">Цель: счёт и остаток времени видны на экране. Здесь ECS
+  соединяется с обычным Unity.</p>
+
+  <p>UI в DOTS не живёт — Canvas, Text и кнопки остаются обычными
+  MonoBehaviour. Значит нужен мост: скрипт, который из <code>Update</code>
+  заглядывает в мир сущностей и переписывает текст.</p>
+
+  <h3>Что создать</h3>
+  <p class="files">Canvas с двумя <code>TextMeshProUGUI</code>.
+  <code>Scripts/UI/GameHud.cs</code> — обычный MonoBehaviour на Canvas.
+  Систему <code>GameTimerSystem</code>, которая вычитает
+  <code>DeltaTime</code> из <code>GameTimer</code>.</p>
+
+  <h3>Доступ к ECS из MonoBehaviour</h3>
+  <table class="api">
+    <tr>
+      <td>World.DefaultGameObjectInjectionWorld<br>&nbsp; .EntityManager</td>
+      <td><b>Вход в мир сущностей</b> из обычного кода. Мир один, создаётся
+      автоматически.</td>
+    </tr>
+    <tr>
+      <td>entityManager.CreateEntityQuery(<br>
+      &nbsp; ComponentType.ReadOnly&lt;Score&gt;())</td>
+      <td><b>Запрос,</b> который потом можно спрашивать каждый кадр. Создавать
+      его надо <b>один раз в Start</b> и хранить в поле.</td>
+    </tr>
+    <tr>
+      <td>query.GetSingleton&lt;Score&gt;()</td>
+      <td><b>Прочитать значение.</b> У запроса свои методы, похожие на
+      <code>SystemAPI</code>.</td>
+    </tr>
+    <tr>
+      <td>query.CalculateEntityCount()</td>
+      <td><b>Сколько подходящих сущностей.</b> Так выводят «монеток на поле: N»
+      без всякого счётчика. Полезно и как проверка перед чтением синглтона.</td>
+    </tr>
+    <tr>
+      <td>query.CompleteDependency()</td>
+      <td><b>Дождаться систем,</b> которые пишут эти компоненты. В простом
+      проекте, где всё на главном потоке, не нужно — но привыкай ставить:
+      как только появятся джобы, без этой строки чтение падает каждый кадр.</td>
+    </tr>
+    <tr>
+      <td>query.ToComponentDataArray&lt;T&gt;(<br>&nbsp; Allocator.Temp)</td>
+      <td><b>Все значения массивом,</b> если нужно не одно. Массив надо
+      освобождать: <code>.Dispose()</code> или <code>using</code>.</td>
+    </tr>
+  </table>
+
+  <div class="box warn">
+    <span class="t">Два правила моста</span>
+    <p><b>Запрос создаётся в <code>Start</code>, не в <code>Update</code>.</b>
+    Создание запроса — операция недешёвая, а делать её 60 раз в секунду
+    незачем.</p>
+    <p><b>Порядок загрузки не гарантирован.</b> MonoBehaviour может стартовать
+    раньше, чем запеклась SubScene, и синглтона в первый кадр ещё не будет.
+    Проверяй <code>CalculateEntityCount() == 1</code> перед чтением, иначе
+    поймаешь исключение на старте.</p>
+  </div>
+
+  <h3>Как проверить</h3>
+  <div class="box ok">
+    <p>Счёт на экране совпадает с тем, что показывает Entities Hierarchy.
+    Таймер убывает. Запусти и останови игру несколько раз подряд — исключений
+    в первом кадре быть не должно.</p>
+  </div>
+</section>
+
+<!-- ======================= ШАГ 8 ======================= -->
+<section class="step">
+  <h2><span class="num">8</span>Конец игры и перезапуск</h2>
+  <p class="goal">Цель: время вышло — игра останавливается, появляется окно
+  с результатом и кнопкой. Кнопка возвращает всё в начальное состояние.</p>
+
+  <p>Нужен флаг, который видят и системы, и UI. Это синглтон с состоянием —
+  тот же приём, что со счётом, но теперь его читают почти все.</p>
+
+  <h3>Что создать</h3>
+  <p class="files">Компонент <code>GameState</code> с полями
+  <code>bool IsOver</code>, <code>bool RestartRequested</code>.
+  Систему <code>GameRestartSystem</code>. Панель Game Over с кнопкой,
+  скрипт на ней пишет <code>RestartRequested = true</code>.</p>
+
+  <h3>Остановка систем</h3>
+  <table class="api">
+    <tr>
+      <td>if (SystemAPI.GetSingleton&lt;GameState&gt;()<br>
+      &nbsp; &nbsp; &nbsp; .IsOver) return;</td>
+      <td><b>Самый простой способ.</b> Первая строка в <code>OnUpdate</code>
+      каждой системы, которую надо приглушить: движение, спавн, подбор, таймер.
+      Понятно и отлаживается легко.</td>
+    </tr>
+    <tr>
+      <td>state.Enabled = false;</td>
+      <td><b>Выключить систему насовсем.</b> Годится для систем, которые делают
+      работу один раз в <code>OnCreate</code>. Для игровой логики не подходит:
+      включить обратно сложнее, чем кажется.</td>
+    </tr>
+    <tr>
+      <td>state.RequireForUpdate&lt;T&gt;()</td>
+      <td><b>Не вызывать OnUpdate,</b> пока нет такого компонента. Ставится
+      в <code>OnCreate</code>. Удобно, но опасно: если компонент пропал,
+      система молча не работает и в консоли ничего нет.</td>
+    </tr>
+  </table>
+
+  <h3>Сброс состояния</h3>
+  <table class="api">
+    <tr>
+      <td>query.ToEntityArray(Allocator.Temp)<br>
+      → em.DestroyEntity(array)</td>
+      <td><b>Удалить все монетки.</b> Сначала собрать массив сущностей, потом
+      удалить — внутри перебора удалять нельзя.</td>
+    </tr>
+    <tr>
+      <td>em.DestroyEntity(EntityQuery)</td>
+      <td><b>Есть и такая перегрузка,</b> но она требует, чтобы в запрос попали
+      все связанные дочерние сущности, иначе бросает
+      <code>ArgumentException</code>. С составными префабами проще через
+      массив.</td>
+    </tr>
+    <tr>
+      <td>em.SetComponentData(e, value)</td>
+      <td><b>Вернуть значения.</b> Счёт в ноль, таймер на полную, позицию
+      игрока в центр, <code>IsOver = false</code>.</td>
+    </tr>
+  </table>
+
+  <div class="box warn">
+    <span class="t">Что тут обычно забывают</span>
+    <p>Сбросить <b>таймер спавнера</b>. Он остался от прошлой партии, и первая
+    монетка либо появится мгновенно, либо через полный интервал вместо нужного.
+    Правило общее: при перезапуске возвращай в исходное <i>всё</i> изменяемое
+    состояние, а не только то, что видно на экране.</p>
+  </div>
+
+  <h3>Как проверить</h3>
+  <div class="box ok">
+    <p>Время вышло → кубик не едет, монетки не появляются, видно окно
+    с результатом. Кнопка → поле чистое, счёт ноль, таймер полный, игрок
+    в центре. Пройди три партии подряд, не выходя из Play: вторая и третья
+    должны быть идентичны первой.</p>
+  </div>
+
+  <h3>Куда идти дальше</h3>
+  <p>Когда это заработает, в игре есть все базовые приёмы ECS: данные
+  в компонентах, логика в системах, бейкинг из сцены, отложенные команды,
+  синглтоны, мост в UI. Следующие темы по порядку полезности:
+  <code>IJobEntity</code> и <code>[BurstCompile]</code> (та же логика, но
+  в несколько потоков), <code>IEnableableComponent</code> и пулы (перестать
+  создавать и удалять сущности каждую секунду), группы систем и явный порядок
+  через <code>[UpdateBefore]</code>, буферы
+  (<code>IBufferElementData</code>) для передачи событий в UI и звук.</p>
+</section>
+
+<!-- ======================= ПРИЛОЖЕНИЕ А ======================= -->
+<section class="step">
+  <h2>Приложение А. Хочу сделать X</h2>
+  <p class="goal">Обратный указатель: по задаче — к нужной конструкции.</p>
+
+  <table class="api">
+    <tr class="grp"><td colspan="2">Данные</td></tr>
+    <tr><td>Хранить число у сущности</td><td><code>struct X : IComponentData</code> с полем</td></tr>
+    <tr><td>Отличать один вид сущностей от другого</td><td>Пустой тег + <code>WithAll&lt;Tag&gt;()</code></td></tr>
+    <tr><td>Хранить одно значение на всю игру</td><td>Компонент на одной сущности + <code>GetSingletonRW</code></td></tr>
+    <tr><td>Хранить список переменной длины</td><td><code>IBufferElementData</code> вместо массива в компоненте</td></tr>
+    <tr><td>Настраивать значение в инспекторе</td><td>Поле в authoring + <code>AddComponent</code> в Baker</td></tr>
+    <tr><td>Сослаться на другую сущность</td><td>Поле типа <code>Entity</code></td></tr>
+
+    <tr class="grp"><td colspan="2">Перебор и поиск</td></tr>
+    <tr><td>Пройти по всем сущностям с A и B</td><td><code>SystemAPI.Query&lt;RefRW&lt;A&gt;, RefRO&lt;B&gt;&gt;()</code></td></tr>
+    <tr><td>Исключить сущности с компонентом C</td><td><code>.WithNone&lt;C&gt;()</code></td></tr>
+    <tr><td>Получить саму сущность в цикле</td><td><code>.WithEntityAccess()</code></td></tr>
+    <tr><td>Сколько всего таких сущностей</td><td><code>query.CalculateEntityCount()</code></td></tr>
+    <tr><td>Найти ближайшую цель</td><td>Цикл с <code>math.distancesq</code> и минимумом</td></tr>
+    <tr><td>Прочитать компонент чужой сущности</td><td><code>SystemAPI.GetComponent&lt;T&gt;(entity)</code></td></tr>
+    <tr><td>Проверить, есть ли компонент</td><td><code>SystemAPI.HasComponent&lt;T&gt;(entity)</code></td></tr>
+
+    <tr class="grp"><td colspan="2">Изменения</td></tr>
+    <tr><td>Создать сущность вне перебора</td><td><code>EntityManager.Instantiate(prefab)</code></td></tr>
+    <tr><td>Создать или удалить внутри перебора</td><td><code>EntityCommandBuffer</code> + <code>Playback</code></td></tr>
+    <tr><td>Добавить компонент на ходу</td><td><code>ecb.AddComponent(e, value)</code></td></tr>
+    <tr><td>Включить и выключить сущность</td><td><code>IEnableableComponent</code> + <code>SetComponentEnabled</code></td></tr>
+
+    <tr class="grp"><td colspan="2">Время, ввод, математика</td></tr>
+    <tr><td>Время кадра</td><td><code>SystemAPI.Time.DeltaTime</code></td></tr>
+    <tr><td>Отсчитать N секунд</td><td><code>float Timer</code> в компоненте, не в системе</td></tr>
+    <tr><td>Клавиатура</td><td><code>Input.GetAxis</code> в <code>OnUpdate</code>, вне джоб</td></tr>
+    <tr><td>Случайное число</td><td><code>Unity.Mathematics.Random</code> в компоненте</td></tr>
+    <tr><td>Повернуть к цели</td><td><code>quaternion.LookRotationSafe(dir, math.up())</code></td></tr>
+    <tr><td>Ограничить по полю</td><td><code>math.clamp</code> по каждой оси</td></tr>
+
+    <tr class="grp"><td colspan="2">Связь с обычным Unity</td></tr>
+    <tr><td>Прочитать данные ECS из MonoBehaviour</td><td>Запрос в <code>Start</code>, чтение в <code>Update</code></td></tr>
+    <tr><td>Нажать кнопку и повлиять на ECS</td><td>Записать флаг в синглтон через <code>EntityManager</code></td></tr>
+    <tr><td>Проиграть звук по событию из ECS</td><td>Буфер событий + MonoBehaviour-читатель, он же чистит буфер</td></tr>
+
+    <tr class="grp"><td colspan="2">Порядок работы систем</td></tr>
+    <tr><td>Задать группу</td><td><code>[UpdateInGroup(typeof(SimulationSystemGroup))]</code></td></tr>
+    <tr><td>Раньше или позже другой системы</td><td><code>[UpdateBefore(typeof(X))]</code>, <code>[UpdateAfter]</code></td></tr>
+    <tr><td>Сделать что-то один раз на старте</td><td><code>OnCreate</code></td></tr>
+  </table>
+</section>
+
+<!-- ======================= ПРИЛОЖЕНИЕ Б ======================= -->
+<section class="step">
+  <h2>Приложение Б. Ошибки и что они значат</h2>
+  <p class="goal">Главная часть справочника. Половина времени новичка уходит
+  на расшифровку этих сообщений.</p>
+
+  <table class="api">
+    <tr class="grp"><td colspan="2">Не компилируется</td></tr>
+    <tr>
+      <td>...must be declared partial</td>
+      <td>У системы нет слова <code>partial</code>. Генератор кода дописывает
+      в неё свою часть, и без этого слова не может.</td>
+    </tr>
+    <tr>
+      <td>field of type ... is neither<br>primitive nor blittable</td>
+      <td>В <code>IComponentData</code> лежит класс, массив, строка или
+      <code>List</code>. Убрать; для переменной длины — буфер.</td>
+    </tr>
+    <tr>
+      <td>The type or namespace 'float3'<br>could not be found</td>
+      <td>Нет <code>using Unity.Mathematics;</code>. Остальные обычные:
+      <code>Unity.Entities</code>, <code>Unity.Transforms</code>,
+      <code>Unity.Collections</code>.</td>
+    </tr>
+
+    <tr class="grp"><td colspan="2">Падает в игре</td></tr>
+    <tr>
+      <td>GetSingleton... requires exactly<br>one entity but found 0</td>
+      <td>Сущности нет вообще. Причины по частоте: authoring лежит вне SubScene;
+      забыл <code>AddComponent</code> в Baker; читаешь в первом кадре, когда
+      SubScene ещё не запеклась.</td>
+    </tr>
+    <tr>
+      <td>...but found 2</td>
+      <td>Синглтон запёкся дважды — обычно authoring висит и на объекте,
+      и на префабе, либо объект продублирован в сцене.</td>
+    </tr>
+    <tr>
+      <td>Attempt to add duplicate<br>component ...</td>
+      <td>У сущности может быть только <b>один</b> компонент каждого типа.
+      Нужно несколько — нужно несколько сущностей
+      (<code>Baker.CreateAdditionalEntity</code>).</td>
+    </tr>
+    <tr>
+      <td>The entity does not exist /<br>has been destroyed</td>
+      <td>Держишь <code>Entity</code> удалённой сущности. Проверяй
+      <code>EntityManager.Exists(e)</code>, либо не удаляй дважды: при двух
+      попаданиях в один кадр <code>DestroyEntity</code> вызовется два раза.</td>
+    </tr>
+    <tr>
+      <td>InvalidOperationException:<br>...was invalidated by a<br>structural change</td>
+      <td>Создал, удалил или добавил компонент прямо посреди
+      <code>foreach</code>. Все такие действия — через
+      <code>EntityCommandBuffer</code>.</td>
+    </tr>
+    <tr>
+      <td>The system ... writes<br>ComponentTypeHandle&lt;T&gt;<br>
+      ...you must call CompleteDependency</td>
+      <td>Читаешь компонент из MonoBehaviour, пока его пишет джоба.
+      <code>query.CompleteDependency()</code> перед чтением. Коварно тем, что
+      исключение летит до присваивания: на экране просто ничего не
+      обновляется.</td>
+    </tr>
+    <tr>
+      <td>ObjectDisposedException /<br>The NativeArray has been<br>deallocated</td>
+      <td>Либо забыл <code>Dispose</code> и используешь освобождённое, либо
+      объявил контейнер через <code>new()</code> без аллокатора — тогда внутри
+      нет памяти вообще.</td>
+    </tr>
+
+    <tr class="grp"><td colspan="2">Не падает, но и не работает</td></tr>
+    <tr>
+      <td>Система не делает ничего,<br>ошибок нет</td>
+      <td>Запрос не находит сущностей. Смотри в Entities Hierarchy, какие
+      компоненты реально есть: чаще всего забыт <code>AddComponent</code>
+      в Baker или сущности не хватает <code>LocalTransform</code> из-за
+      флага <code>Renderable</code> вместо <code>Dynamic</code>.</td>
+    </tr>
+    <tr>
+      <td>Сущности нет в Entities<br>Hierarchy</td>
+      <td>Объект вне SubScene, или SubScene не перепеклась. Выдели её,
+      <b>Open</b> → <b>Close</b>.</td>
+    </tr>
+    <tr>
+      <td>Сущность есть, но её не видно<br>в игре</td>
+      <td>Не установлен <code>com.unity.entities.graphics</code>; или у объекта
+      нет MeshRenderer; или флаг <code>None</code> вместо
+      <code>Renderable</code>; или сущность уехала в NaN.</td>
+    </tr>
+    <tr>
+      <td>Изменил синглтон — значение<br>не поменялось</td>
+      <td><code>GetSingleton</code> возвращает копию. Для записи —
+      <code>GetSingletonRW&lt;T&gt;().ValueRW</code>.</td>
+    </tr>
+    <tr>
+      <td>Объект улетает в бесконечность<br>или исчезает навсегда</td>
+      <td>NaN в позиции. Обычно <code>math.normalize</code> от нулевого вектора.
+      Проверяй длину до нормализации.</td>
+    </tr>
+    <tr>
+      <td>Движение зависит от частоты<br>кадров</td>
+      <td>Не умножил на <code>SystemAPI.Time.DeltaTime</code>.</td>
+    </tr>
+    <tr>
+      <td>Событие срабатывает каждый кадр<br>вместо одного раза</td>
+      <td>Читатель буфера не вызвал <code>Clear()</code> после обработки.</td>
+    </tr>
+    <tr>
+      <td>Правки authoring не влияют<br>на игру</td>
+      <td>SubScene открыта на редактирование (<b>Open</b>) — тогда работают
+      GameObject'ы, а не сущности. Закрой её.</td>
+    </tr>
+  </table>
+</section>
+
+<!-- ======================= ПРИЛОЖЕНИЕ В ======================= -->
+<section class="step">
+  <h2>Приложение В. Чем смотреть, что происходит</h2>
+  <p class="goal">В ECS нельзя просто нажать на объект в Hierarchy и увидеть
+  состояние. Инструменты другие, и без них отладка превращается в угадывание.</p>
+
+  <table class="api">
+    <tr>
+      <td>Window → Entities → Hierarchy</td>
+      <td><b>Главное окно.</b> Все сущности мира и их компоненты со значениями,
+      живьём во время игры. Первое место, куда смотреть, когда «не работает».
+      Есть поиск по имени компонента.</td>
+    </tr>
+    <tr>
+      <td>Window → Entities → Systems</td>
+      <td><b>Список систем</b> в порядке выполнения, с галочками включения
+      и временем работы. Видно, попала ли твоя система в нужную группу
+      и вызывается ли вообще.</td>
+    </tr>
+    <tr>
+      <td>Window → Entities → Components</td>
+      <td><b>Все типы компонентов</b> в проекте и сколько сущностей имеет
+      каждый. Быстрый ответ на «запеклось ли оно вообще».</td>
+    </tr>
+    <tr>
+      <td>Window → Entities → Archetypes</td>
+      <td><b>Наборы компонентов</b> и память под них. Для первого проекта
+      любопытно, но не обязательно.</td>
+    </tr>
+    <tr>
+      <td>Инспектор SubScene: Open / Close</td>
+      <td><b>Переключение режима.</b> Open — правишь объекты, сущностей нет.
+      Close — объекты запекаются в сущности. Многие «необъяснимые» проблемы
+      сводятся к забытому Open.</td>
+    </tr>
+    <tr>
+      <td>Debug.Log в OnUpdate</td>
+      <td><b>Работает,</b> пока система без <code>[BurstCompile]</code> и логика
+      не в джобе. Внутри Burst-кода логировать нельзя — это одна из причин,
+      почему Burst в первом проекте только мешает.</td>
+    </tr>
+  </table>
+
+  <div class="box ok">
+    <span class="t">Порядок разбора любой поломки</span>
+    <ul>
+      <li>Есть ли ошибка в консоли. Если есть — приложение Б, не угадывай.</li>
+      <li>Существует ли сущность. Entities Hierarchy.</li>
+      <li>Те ли у неё компоненты и те ли значения. Там же.</li>
+      <li>Вызывается ли система. Entities → Systems, или <code>Debug.Log</code>.</li>
+      <li>Находит ли запрос хоть что-то. <code>CalculateEntityCount()</code>
+      в лог.</li>
+    </ul>
+    <p>Четыре из пяти поломок новичка находятся на втором или третьем пункте,
+    и оба проверяются глазами за десять секунд.</p>
+  </div>
+</section>
+
+</body>
+</html>

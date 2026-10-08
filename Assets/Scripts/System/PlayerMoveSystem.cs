@@ -17,7 +17,7 @@ public partial struct PlayerMoveSystem : ISystem
 
             if(horizontal != 0 || vertical != 0)
             {
-                math.normalize(direction);
+                direction = math.normalize(direction);
             }
 
             var xPos = math.clamp(transform.ValueRW.Position.x + direction.x * speed.ValueRO.Value * SystemAPI.Time.DeltaTime, -10, 10); 
